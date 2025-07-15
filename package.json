@@ -1,0 +1,51 @@
+{
+  "name": "free-bidi",
+  "displayName": "Free Bidi Editor",
+  "description": "Converts ISO-8859-8 files to UTF-8 with LRO added before every Hebrew segments for free bidi display, preserving ISO-8859-8 on disk",
+  "version": "0.0.1",
+  "publisher": "NLTC Inc.",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "activationEvents": [
+        "onStartupFinished",
+        "workspaceContains:*.cob"
+      ],
+  "categories": ["Other"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "COBOLIT",
+        "extensions": [".cob", ".inc", ".cpy", ".pco"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "free-bidi.convert",
+        "title": "Free Bidi Editor: Convert File"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^16",
+    "@types/iconv-lite": "^0.0.1",
+    "@types/mocha":"10.0.10",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "iconv-lite": "^0.6.3"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nautilus009/free-bidi.git"
+  }
+}
