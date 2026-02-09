@@ -24,7 +24,44 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async (document) => {
         console.log(`DEBUG: onDidOpenTextDocument triggered, languageId: ${document.languageId}, uri: ${document.uri.fsPath}`);
         if (document.languageId.toLowerCase() === 'cobolit' && document.uri.scheme === 'file' && !document.uri.fsPath.includes(path.sep + '.freebidi' + path.sep)) {
-            await convertFile(document.uri, outputChannel);
+            const filePath = document.uri.fsPath;
+            const freeBidiPath = path.join(path.dirname(filePath), '.freebidi', path.basename(filePath));
+
+            // Check if freebidi version already exists
+            if (fs.existsSync(freeBidiPath)) {
+                // Open existing freebidi file and close original
+                try {
+                    // Find the original editor BEFORE opening freebidi
+                    const originalEditor = vscode.window.visibleTextEditors.find(
+                        editor => editor.document.uri.fsPath === filePath
+                    );
+                    const viewColumn = originalEditor?.viewColumn;
+
+                    // Open freebidi document in the same position
+                    const freeBidiDoc = await vscode.workspace.openTextDocument(freeBidiPath);
+                    await vscode.window.showTextDocument(freeBidiDoc, {
+                        viewColumn: viewColumn,
+                        preview: false
+                    });
+
+                    // Now close the original file by finding its tab
+                    const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs);
+                    const originalTab = tabs.find(tab =>
+                        tab.input instanceof vscode.TabInputText &&
+                        tab.input.uri.fsPath === filePath
+                    );
+
+                    if (originalTab) {
+                        await vscode.window.tabGroups.close(originalTab);
+                        outputChannel.appendLine(`Closed original file and opened existing freebidi version: ${freeBidiPath}`);
+                    }
+                } catch (err: any) {
+                    outputChannel.appendLine(`Error opening existing freebidi file: ${err.message}`);
+                }
+            } else {
+                // Convert and create freebidi file
+                await convertFile(document.uri, outputChannel);
+            }
         }
     }));
 
@@ -36,15 +73,42 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    // Handle file close
-    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((document) => {
-        console.log(`DEBUG: onDidCloseTextDocument triggered, path: ${document.uri.fsPath}`);
-        if (document.uri.fsPath.includes(path.sep + '.freebidi' + path.sep)) {
-            try {
-                fs.unlinkSync(document.uri.fsPath);
-                outputChannel.appendLine(`Deleted temporary file: ${document.uri.fsPath}`);
-            } catch (err: any) {
-                outputChannel.appendLine(`Error deleting temporary file ${document.uri.fsPath}: ${err.message}`);
+    // Handle tab close using Tab Groups API
+    context.subscriptions.push(vscode.window.tabGroups.onDidChangeTabs((event) => {
+        console.log(`DEBUG: onDidChangeTabs triggered`);
+        // Check for closed tabs
+        for (const tab of event.closed) {
+            if (tab.input instanceof vscode.TabInputText) {
+                const filePath = tab.input.uri.fsPath;
+                console.log(`DEBUG: Tab closed: ${filePath}`);
+
+                if (filePath.includes(path.sep + '.freebidi' + path.sep)) {
+                    outputChannel.appendLine(`Freebidi tab closed: ${filePath}`);
+                    // Add a small delay to ensure file handles are released
+                    setTimeout(() => {
+                        try {
+                            if (fs.existsSync(filePath)) {
+                                fs.unlinkSync(filePath);
+                                outputChannel.appendLine(`Deleted temporary file: ${filePath}`);
+                            } else {
+                                outputChannel.appendLine(`File already deleted: ${filePath}`);
+                            }
+                        } catch (err: any) {
+                            outputChannel.appendLine(`Error deleting temporary file ${filePath}: ${err.message}`);
+                            // Retry once after another delay
+                            setTimeout(() => {
+                                try {
+                                    if (fs.existsSync(filePath)) {
+                                        fs.unlinkSync(filePath);
+                                        outputChannel.appendLine(`Deleted temporary file on retry: ${filePath}`);
+                                    }
+                                } catch (retryErr: any) {
+                                    outputChannel.appendLine(`Failed to delete on retry ${filePath}: ${retryErr.message}`);
+                                }
+                            }, 500);
+                        }
+                    }, 100);
+                }
             }
         }
     }));
@@ -127,8 +191,29 @@ async function convertFile(uri: vscode.Uri, outputChannel: vscode.OutputChannel)
             outputChannel.appendLine(`Saved UTF-8 file with BOM: ${outPath}`);
 
             // Open the converted file and set encoding to UTF-8
+            // Find the original editor position before opening freebidi
+            const originalEditor = vscode.window.visibleTextEditors.find(
+                editor => editor.document.uri.fsPath === filePath
+            );
+            const viewColumn = originalEditor?.viewColumn;
+
             const doc = await vscode.workspace.openTextDocument(outPath);
-            await vscode.window.showTextDocument(doc);
+            await vscode.window.showTextDocument(doc, {
+                viewColumn: viewColumn,
+                preview: false
+            });
+
+            // Close the original file tab using tabGroups API
+            const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs);
+            const originalTab = tabs.find(tab =>
+                tab.input instanceof vscode.TabInputText &&
+                tab.input.uri.fsPath === filePath
+            );
+
+            if (originalTab) {
+                await vscode.window.tabGroups.close(originalTab);
+                outputChannel.appendLine(`Closed original file tab: ${filePath}`);
+            }
         } catch (err: any) {
             outputChannel.appendLine(`Error saving or opening ${outPath}: ${err.message}`);
             vscode.window.showErrorMessage(`Failed to convert ${path.basename(filePath)}: ${err.message}`);

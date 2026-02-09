@@ -4,7 +4,8 @@ The Free Bidi extension for Visual Studio Code simplifies working with COBOL fil
 Features
 
 Automatic Conversion: Converts .cob or .COB files with Hebrew text from ISO-8859-8 or windows-1255 to UTF-8 with LRO markers.
-Temporary Files: Saves converted files in a .freebidi directory, which are deleted when closed.
+Smart Tab Management: When opening a source file that has an existing .freebidi version, automatically closes the original file tab and opens only the freebidi version.
+Temporary Files: Saves converted files in a .freebidi directory, which are automatically deleted when their tabs are closed.
 Real-Time Hebrew Support: Automatically inserts LRO markers (\u202D) before new Hebrew characters typed in .freebidi files.
 Encoding Enforcement: Ensures .freebidi files are opened with UTF-8 encoding, regardless of VS Code?s files.encoding or files.autoGuessEncoding settings.
 Non-Recursive: Prevents recursive file opening for .freebidi files.
@@ -54,7 +55,7 @@ The converted file opens automatically in VS Code with UTF-8 encoding.
 
 Edit Hebrew Text:
 
-When typing Hebrew characters (e.g., à) in the .freebidi file, the extension automatically inserts \u202D before each Hebrew sequence to maintain text direction.
+When typing Hebrew characters (e.g., ï¿½) in the .freebidi file, the extension automatically inserts \u202D before each Hebrew sequence to maintain text direction.
 
 
 Save Changes:
