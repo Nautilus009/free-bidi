@@ -5,6 +5,7 @@ Features
 
 Automatic Conversion: Converts .cob or .COB files with Hebrew text from ISO-8859-8 or windows-1255 to UTF-8 with LRO markers.
 Smart Tab Management: When opening a source file that has an existing .freebidi version, automatically closes the original file tab and opens only the freebidi version.
+Line Number Preservation: When opening a file with a specific line number (e.g., src/file.cob:100), the freebidi version opens at the same line position.
 Temporary Files: Saves converted files in a .freebidi directory, which are automatically deleted when their tabs are closed.
 Real-Time Hebrew Support: Automatically inserts LRO markers (\u202D) before new Hebrew characters typed in .freebidi files.
 Encoding Enforcement: Ensures .freebidi files are opened with UTF-8 encoding, regardless of VS Code?s files.encoding or files.autoGuessEncoding settings.

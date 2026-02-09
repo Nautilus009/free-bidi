@@ -2,6 +2,22 @@
 
 All notable changes to the "free-bidi" extension will be documented in this file.
 
+## [0.0.6] - 2026-02-08
+
+### Added
+- **Line number preservation**: When opening a source file with a specific line number (e.g., `file.cob:100`), the freebidi version now opens at the same line
+- **Enhanced cursor positioning**: Improved timing mechanism to ensure cursor position is correctly captured and applied when switching to freebidi files
+
+### Changed
+- Switched from `onDidOpenTextDocument` to `onDidChangeActiveTextEditor` for more reliable file interception
+- Added delay mechanism (100ms) to allow VSCode to navigate to requested line before capturing position
+- Improved handling of both existing freebidi files and new conversions
+
+### Fixed
+- Fixed tab closing errors with better error handling and graceful failure recovery
+- Resolved timing issues that caused cursor to jump to line 1 instead of requested line
+- Fixed regression where original source file would remain open alongside freebidi version
+
 ## [0.0.5] - 2026-02-08
 
 ### Added
