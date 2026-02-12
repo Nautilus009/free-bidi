@@ -2,6 +2,13 @@
 
 All notable changes to the "free-bidi" extension will be documented in this file.
 
+## [0.0.10] - 2026-02-12
+
+### Changed
+- Expanded RTL detection and LRO insertion to include Arabic Unicode ranges (in addition to Hebrew)
+- Aligned conversion scope with declared COBOLIT extensions: `.cob`, `.inc`, `.cpy`, `.pco`
+- Aligned manual convert command behavior with COBOLIT files and supported extensions
+
 ## [0.0.9] - 2026-02-12
 
 ### Changed

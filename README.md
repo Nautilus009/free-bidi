@@ -3,7 +3,7 @@ Overview
 The Free Bidi extension for Visual Studio Code simplifies working with COBOL files containing RTL language text. It automatically converts files from a configurable RTL encoding (default: ISO-8859-8) to UTF-8, adding Left-to-Right Override (LRO, \u202D) markers before RTL language text to ensure proper display. The converted files are stored in a .freebidi directory and opened in VS Code with UTF-8 encoding. When typing new RTL language characters in these converted files, the extension automatically inserts LRO markers to maintain consistent text direction.
 Features
 
-Automatic Conversion: Converts .cob or .COB files with RTL language text from a configurable RTL encoding (default: ISO-8859-8) to UTF-8 with LRO markers.
+Automatic Conversion: Converts COBOLIT files (`.cob`, `.inc`, `.cpy`, `.pco`) with RTL language text from a configurable RTL encoding (default: ISO-8859-8) to UTF-8 with LRO markers.
 Smart Tab Management: When opening a source file that has an existing .freebidi version, automatically closes the original file tab and opens only the freebidi version.
 Line Number Preservation: When opening a file with a specific line number (e.g., src/file.cob:100), the freebidi version opens at the same line position.
 Temporary Files: Saves converted files in a .freebidi directory, which are automatically deleted when their tabs are closed.
@@ -45,7 +45,7 @@ Usage
 
 Open a COBOL File:
 
-Open a .cob or .COB file containing RTL language text (e.g., /Users/orennissan/Desktop/test.cob).
+Open a COBOLIT file (`.cob`, `.inc`, `.cpy`, or `.pco`) containing RTL language text (e.g., /Users/orennissan/Desktop/test.cob).
 Set the language mode to COBOLIT (Ctrl+Shift+P ? ?Change Language Mode? ? COBOLIT).
 
 
@@ -73,7 +73,7 @@ Closing the .freebidi file deletes it to keep your workspace clean.
 
 Manual Conversion
 
-Run the command Free Bidi: Convert RTL encoding to UTF-8 (Ctrl+Shift+P ? type ?Free Bidi?) to manually convert a file with the iso88598 language ID.
+Run the command Free Bidi Editor: Convert File (Ctrl+Shift+P ? type ?Free Bidi?) to manually convert the active COBOLIT file (`.cob`, `.inc`, `.cpy`, or `.pco`).
 
 Troubleshooting
 

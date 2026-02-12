@@ -4,7 +4,9 @@ import * as path from 'path';
 import * as iconv from 'iconv-lite';
 
 const DEFAULT_RTL_ENCODING = 'ISO-8859-8';
-const RTL_CHARACTERS_REGEX = /[\u0590-\u05FF]/;
+const RTL_CHARACTERS_REGEX = /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+const RTL_SEGMENTS_REGEX = /([\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+)/g;
+const SUPPORTED_COBOL_EXTENSIONS = new Set(['.cob', '.inc', '.cpy', '.pco']);
 
 function normalizeFsPath(filePath: string): string {
     const resolved = path.resolve(filePath);
@@ -59,6 +61,11 @@ function getRtlEncoding(): string {
     return DEFAULT_RTL_ENCODING;
 }
 
+function isSupportedCobolFile(filePath: string): boolean {
+    const ext = path.extname(filePath).toLowerCase();
+    return SUPPORTED_COBOL_EXTENSIONS.has(ext);
+}
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('DEBUG: Entering activate function for free-bidi');
     const outputChannel = vscode.window.createOutputChannel('free-bidi');
@@ -69,8 +76,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('free-bidi.convert', async () => {
         console.log('DEBUG: Executing free-bidi.convert command');
         const editor = vscode.window.activeTextEditor;
-        if (!editor || editor.document.languageId.toLowerCase() !== 'iso88598') {
-            vscode.window.showErrorMessage('Open a file with iso88598 language ID to convert.');
+        if (!editor || editor.document.languageId.toLowerCase() !== 'cobolit' || !isSupportedCobolFile(editor.document.uri.fsPath)) {
+            vscode.window.showErrorMessage('Open a COBOLIT file (.cob, .inc, .cpy, or .pco) to convert.');
             return;
         }
         await convertFile(editor.document.uri, outputChannel);
@@ -227,7 +234,7 @@ export function activate(context: vscode.ExtensionContext) {
 async function convertFile(uri: vscode.Uri, outputChannel: vscode.OutputChannel) {
     const filePath = uri.fsPath;
     console.log(`DEBUG: convertFile called for ${filePath}`);
-    if (!filePath.toLowerCase().endsWith('.cob')) {
+    if (!isSupportedCobolFile(filePath)) {
         outputChannel.appendLine(`Skipping non-COBOL file: ${filePath}`);
         return;
     }
@@ -253,7 +260,7 @@ async function convertFile(uri: vscode.Uri, outputChannel: vscode.OutputChannel)
         }
 
         // Add LRO markers to RTL language text
-        const newContent = text.replace(/([\u0590-\u05FF]+)/g, '\u202D$1');
+        const newContent = text.replace(RTL_SEGMENTS_REGEX, '\u202D$1');
         outputChannel.appendLine(`Processing file: ${filePath} (encoding: ${rtlEncoding}) New content: ${newContent}`);
 
         // Save to .freebidi directory with UTF-8 BOM
