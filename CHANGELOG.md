@@ -2,6 +2,15 @@
 
 All notable changes to the "free-bidi" extension will be documented in this file.
 
+## [0.0.7] - 2026-02-12
+
+### Added
+- Added extension icon asset for Marketplace/Extensions view (`assets/free-bidi-icon.png`)
+- Added editable SVG source icon (`assets/free-bidi-icon.svg`)
+
+### Changed
+- Updated extension manifest to use the new icon (`"icon": "assets/free-bidi-icon.png"`)
+
 ## [0.0.6] - 2026-02-08
 
 ### Added

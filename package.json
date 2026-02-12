@@ -2,8 +2,9 @@
   "name": "free-bidi",
   "displayName": "Free Bidi Editor",
   "description": "Converts ISO-8859-8 files to UTF-8 with LRO added before every Hebrew segments for free bidi display, preserving ISO-8859-8 on disk",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "NLTC",
+  "icon": "assets/free-bidi-icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },

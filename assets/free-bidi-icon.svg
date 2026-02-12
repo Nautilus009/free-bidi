@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Free Bidi icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0B4F6C"/>
+      <stop offset="100%" stop-color="#01BAEF"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#E8F7FF"/>
+      <stop offset="100%" stop-color="#BEE9FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="6" y="6" width="116" height="116" rx="24" fill="url(#bg)"/>
+
+  <path d="M24 46H92" stroke="url(#flow)" stroke-width="10" stroke-linecap="round"/>
+  <path d="M84 38L100 46L84 54" fill="none" stroke="#E8F7FF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <path d="M104 82H36" stroke="url(#flow)" stroke-width="10" stroke-linecap="round"/>
+  <path d="M44 74L28 82L44 90" fill="none" stroke="#E8F7FF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="64" y="70" text-anchor="middle" font-family="Verdana, sans-serif" font-size="24" font-weight="700" fill="#FFFFFF">BiDi</text>
+</svg>
