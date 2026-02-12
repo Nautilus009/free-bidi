@@ -2,6 +2,11 @@
 
 All notable changes to the "free-bidi" extension will be documented in this file.
 
+## [0.0.9] - 2026-02-12
+
+### Changed
+- Updated extension description text in `package.json` to accurately describe behavior as preserving bidirectional display
+
 ## [0.0.8] - 2026-02-12
 
 ### Changed

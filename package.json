@@ -2,7 +2,7 @@
   "name": "free-bidi",
   "displayName": "Free Bidi Editor",
   "description": "Converts RTL encoded (such as ISO-8859-8 or ISO-8859-6) files to UTF-8 with LRO added before every RTL language (such as Hebrew or Arabic) segments for free bidi display, preserving bidirectional display",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "NLTC",
   "icon": "assets/free-bidi-icon.png",
   "engines": {
