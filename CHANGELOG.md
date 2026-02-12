@@ -2,6 +2,12 @@
 
 All notable changes to the "free-bidi" extension will be documented in this file.
 
+## [0.0.8] - 2026-02-12
+
+### Changed
+- Added configurable RTL encoding setting (`freeBidi.rtlEncoding`) with default `ISO-8859-8` for conversion and save-back
+- Updated documentation to describe configuration-driven RTL encoding behavior
+
 ## [0.0.7] - 2026-02-12
 
 ### Added
@@ -47,7 +53,7 @@ All notable changes to the "free-bidi" extension will be documented in this file
 ## [0.0.4] - Previous Release
 
 ### Features
-- Automatic conversion of ISO-8859-8 COBOL files to UTF-8 with LRO markers
-- Support for Hebrew text in COBOL files
-- Automatic insertion of LRO markers before Hebrew text segments
-- Save changes back to original ISO-8859-8 format
+- Automatic conversion of RTL encoding COBOL files to UTF-8 with LRO markers
+- Support for RTL language text in COBOL files
+- Automatic insertion of LRO markers before RTL language text segments
+- Save changes back to original RTL encoding format

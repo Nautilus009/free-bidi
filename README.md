@@ -1,16 +1,16 @@
 Free Bidi VS Code Extension
 Overview
-The Free Bidi extension for Visual Studio Code simplifies working with COBOL files containing Hebrew text. It automatically converts files from ISO-8859-8 or windows-1255 encodings to UTF-8, adding Left-to-Right Override (LRO, \u202D) markers before Hebrew text to ensure proper display. The converted files are stored in a .freebidi directory and opened in VS Code with UTF-8 encoding. When typing new Hebrew characters in these converted files, the extension automatically inserts LRO markers to maintain consistent text direction.
+The Free Bidi extension for Visual Studio Code simplifies working with COBOL files containing RTL language text. It automatically converts files from a configurable RTL encoding (default: ISO-8859-8) to UTF-8, adding Left-to-Right Override (LRO, \u202D) markers before RTL language text to ensure proper display. The converted files are stored in a .freebidi directory and opened in VS Code with UTF-8 encoding. When typing new RTL language characters in these converted files, the extension automatically inserts LRO markers to maintain consistent text direction.
 Features
 
-Automatic Conversion: Converts .cob or .COB files with Hebrew text from ISO-8859-8 or windows-1255 to UTF-8 with LRO markers.
+Automatic Conversion: Converts .cob or .COB files with RTL language text from a configurable RTL encoding (default: ISO-8859-8) to UTF-8 with LRO markers.
 Smart Tab Management: When opening a source file that has an existing .freebidi version, automatically closes the original file tab and opens only the freebidi version.
 Line Number Preservation: When opening a file with a specific line number (e.g., src/file.cob:100), the freebidi version opens at the same line position.
 Temporary Files: Saves converted files in a .freebidi directory, which are automatically deleted when their tabs are closed.
-Real-Time Hebrew Support: Automatically inserts LRO markers (\u202D) before new Hebrew characters typed in .freebidi files.
+Real-Time RTL language Support: Automatically inserts LRO markers (\u202D) before new RTL language characters typed in .freebidi files.
 Encoding Enforcement: Ensures .freebidi files are opened with UTF-8 encoding, regardless of VS Code?s files.encoding or files.autoGuessEncoding settings.
 Non-Recursive: Prevents recursive file opening for .freebidi files.
-Save Back: Updates the original file (in ISO-8859-8) when saving changes to the .freebidi file, removing LRO markers.
+Save Back: Updates the original file using the configured RTL encoding (default: ISO-8859-8) when saving changes to the .freebidi file, removing LRO markers.
 
 Installation
 
@@ -33,7 +33,8 @@ Configure VS Code Settings:
 Open VS Code settings (Ctrl+, or Cmd+, on macOS).
 Add the following to settings.json for the best experience:{
     "editor.renderControlCharacters": false,
-    "editor.unicodeHighlight.invisibleCharacters": false
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "freeBidi.rtlEncoding": "ISO-8859-8"
 }
 
 The settings "editor.renderControlCharacters": false and "editor.unicodeHighlight.invisibleCharacters": false prevent visual glyphs for LRO markers and other invisible Unicode characters, ensuring a clean editing experience.
@@ -44,24 +45,24 @@ Usage
 
 Open a COBOL File:
 
-Open a .cob or .COB file containing Hebrew text (e.g., /Users/orennissan/Desktop/test.cob).
+Open a .cob or .COB file containing RTL language text (e.g., /Users/orennissan/Desktop/test.cob).
 Set the language mode to COBOLIT (Ctrl+Shift+P ? ?Change Language Mode? ? COBOLIT).
 
 
 Automatic Conversion:
 
-The extension detects the file?s encoding (ISO-8859-8 or windows-1255) and creates a UTF-8 version with LRO markers in the .freebidi directory (e.g., /Users/orennissan/Desktop/.freebidi/test.cob).
+The extension uses freeBidi.rtlEncoding from settings.json (default: ISO-8859-8) and creates a UTF-8 version with LRO markers in the .freebidi directory (e.g., /Users/orennissan/Desktop/.freebidi/test.cob).
 The converted file opens automatically in VS Code with UTF-8 encoding.
 
 
-Edit Hebrew Text:
+Edit RTL language Text:
 
-When typing Hebrew characters (e.g., �) in the .freebidi file, the extension automatically inserts \u202D before each Hebrew sequence to maintain text direction.
+When typing RTL language characters in the .freebidi file, the extension automatically inserts \u202D before each RTL language sequence to maintain text direction.
 
 
 Save Changes:
 
-Saving the .freebidi file updates the original file, removing LRO markers and encoding it back to ISO-8859-8.
+Saving the .freebidi file updates the original file, removing LRO markers and encoding it back using freeBidi.rtlEncoding (default: ISO-8859-8).
 
 
 Close File:
@@ -72,7 +73,7 @@ Closing the .freebidi file deletes it to keep your workspace clean.
 
 Manual Conversion
 
-Run the command Free Bidi: Convert ISO-8859-8 to UTF-8 (Ctrl+Shift+P ? type ?Free Bidi?) to manually convert a file with the iso88598 language ID.
+Run the command Free Bidi: Convert RTL encoding to UTF-8 (Ctrl+Shift+P ? type ?Free Bidi?) to manually convert a file with the iso88598 language ID.
 
 Troubleshooting
 
@@ -80,7 +81,7 @@ File Not Converting:
 
 Ensure the file has the COBOLIT language ID.
 Check the Output panel (free-bidi) for error messages.
-Verify the file contains Hebrew characters (\u0590-\u05FF).
+Verify the file contains RTL language characters.
 
 
 Encoding Issues:
@@ -96,8 +97,8 @@ Expect: 00000000: efbb bf ... (UTF-8 BOM).
 
 LRO Not Inserted:
 
-Ensure you?re editing the .freebidi file, not the original .cob file.
-Check the Output panel for Inserted LRO before Hebrew text....
+Ensure you're editing the .freebidi file, not the original .cob file.
+Check the Output panel for Inserted LRO before RTL language text....
 
 
 Extension Not Activating:

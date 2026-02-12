@@ -3,6 +3,62 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as iconv from 'iconv-lite';
 
+const DEFAULT_RTL_ENCODING = 'ISO-8859-8';
+const RTL_CHARACTERS_REGEX = /[\u0590-\u05FF]/;
+
+function normalizeFsPath(filePath: string): string {
+    const resolved = path.resolve(filePath);
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+}
+
+async function closeOriginalTabs(filePath: string, outputChannel: vscode.OutputChannel): Promise<void> {
+    const normalizedOriginal = normalizeFsPath(filePath);
+    const closeMatchingTabs = async (): Promise<number> => {
+        const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs);
+        const originalTabs = tabs.filter(tab =>
+            tab.input instanceof vscode.TabInputText &&
+            normalizeFsPath(tab.input.uri.fsPath) === normalizedOriginal
+        );
+
+        if (originalTabs.length === 0) {
+            return 0;
+        }
+
+        await vscode.window.tabGroups.close(originalTabs);
+        return originalTabs.length;
+    };
+
+    try {
+        const closedCount = await closeMatchingTabs();
+        if (closedCount > 0) {
+            outputChannel.appendLine(`Closed ${closedCount} original file tab(s): ${filePath}`);
+            return;
+        }
+    } catch (err: any) {
+        outputChannel.appendLine(`Immediate tab close failed for ${filePath}: ${err.message}`);
+    }
+
+    setTimeout(async () => {
+        try {
+            const closedCount = await closeMatchingTabs();
+            if (closedCount > 0) {
+                outputChannel.appendLine(`Closed ${closedCount} original file tab(s) on retry: ${filePath}`);
+            }
+        } catch (retryErr: any) {
+            outputChannel.appendLine(`Retry close failed for ${filePath}: ${retryErr.message}`);
+        }
+    }, 120);
+}
+
+function getRtlEncoding(): string {
+    const configured = vscode.workspace.getConfiguration('freeBidi').get<string>('rtlEncoding');
+    const requestedEncoding = configured?.trim() || DEFAULT_RTL_ENCODING;
+    if (iconv.encodingExists(requestedEncoding)) {
+        return requestedEncoding;
+    }
+    return DEFAULT_RTL_ENCODING;
+}
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('DEBUG: Entering activate function for free-bidi');
     const outputChannel = vscode.window.createOutputChannel('free-bidi');
@@ -62,22 +118,8 @@ export function activate(context: vscode.ExtensionContext) {
                         freeBidiEditor.selection = selection;
                         freeBidiEditor.revealRange(selection, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
 
-                        // Close the original tab
-                        const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs);
-                        const originalTab = tabs.find(tab =>
-                            tab.input instanceof vscode.TabInputText &&
-                            tab.input.uri.fsPath === filePath
-                        );
-
-                        if (originalTab) {
-                            try {
-                                await vscode.window.tabGroups.close(originalTab);
-                                outputChannel.appendLine(`Closed original file tab: ${filePath}`);
-                            } catch (closeErr: any) {
-                                // Tab might already be closed or invalid, log but continue
-                                outputChannel.appendLine(`Note: Could not close original tab (${closeErr.message}), may already be closed`);
-                            }
-                        }
+                        // Close any original source tabs after freebidi opens
+                        await closeOriginalTabs(filePath, outputChannel);
 
                         outputChannel.appendLine(`Opened freebidi at line ${selection.start.line + 1}`);
                     } catch (err: any) {
@@ -150,7 +192,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    // Handle text changes to insert LRO before Hebrew characters in .freebidi files
+    // Handle text changes to insert LRO before RTL language characters in .freebidi files
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (event) => {
         const document = event.document;
         if (!document.uri.fsPath.includes(path.sep + '.freebidi' + path.sep)) {
@@ -166,11 +208,11 @@ export function activate(context: vscode.ExtensionContext) {
         const edits: vscode.TextEdit[] = [];
         for (const change of event.contentChanges) {
             const text = change.text;
-            if (/[\u0590-\u05FF]/.test(text)) {
-                // Insert \u202D before the Hebrew text
+            if (RTL_CHARACTERS_REGEX.test(text)) {
+                // Insert \u202D before the RTL language text
                 const position = change.range.start;
                 edits.push(vscode.TextEdit.insert(position, '\u202D'));
-                outputChannel.appendLine(`Inserted LRO before Hebrew text at position ${position.line}:${position.character}`);
+                outputChannel.appendLine(`Inserted LRO before RTL language text at position ${position.line}:${position.character}`);
             }
         }
 
@@ -192,27 +234,27 @@ async function convertFile(uri: vscode.Uri, outputChannel: vscode.OutputChannel)
 
     try {
         const content = fs.readFileSync(filePath);
-        // Try ISO-8859-8 first, then windows-1255
-        let text: string;
-        let encodingUsed: string = 'ISO-8859-8';
-        try {
-            text = iconv.decode(content, 'ISO-8859-8');
-            if (!/[\u0590-\u05FF]/.test(text)) {
-                throw new Error('No Hebrew characters detected');
-            }
-        } catch (err) {
-            outputChannel.appendLine(`ISO-8859-8 decoding failed for ${filePath}: ${err}, trying windows-1255`);
-            text = iconv.decode(content, 'windows-1255');
-            encodingUsed = 'windows-1255';
-            if (!/[\u0590-\u05FF]/.test(text)) {
-                outputChannel.appendLine(`No Hebrew characters in windows-1255 for ${filePath}`);
-                return;
-            }
+        const configuredEncoding = vscode.workspace.getConfiguration('freeBidi').get<string>('rtlEncoding')?.trim();
+        const rtlEncoding = getRtlEncoding();
+        if (configuredEncoding && configuredEncoding !== rtlEncoding) {
+            outputChannel.appendLine(`Invalid freeBidi.rtlEncoding value '${configuredEncoding}', falling back to ${rtlEncoding}`);
         }
 
-        // Add LRO markers to Hebrew text
+        // Decode using configured RTL encoding, defaulting to ISO-8859-8
+        let text: string;
+        try {
+            text = iconv.decode(content, rtlEncoding);
+            if (!RTL_CHARACTERS_REGEX.test(text)) {
+                throw new Error('No RTL language characters detected');
+            }
+        } catch (err: any) {
+            outputChannel.appendLine(`Decoding failed for ${filePath} using ${rtlEncoding}: ${err.message || err}`);
+            return;
+        }
+
+        // Add LRO markers to RTL language text
         const newContent = text.replace(/([\u0590-\u05FF]+)/g, '\u202D$1');
-        outputChannel.appendLine(`Processing file: ${filePath} (encoding: ${encodingUsed}) New content: ${newContent}`);
+        outputChannel.appendLine(`Processing file: ${filePath} (encoding: ${rtlEncoding}) New content: ${newContent}`);
 
         // Save to .freebidi directory with UTF-8 BOM
         const freeBidiDir = path.join(path.dirname(filePath), '.freebidi');
@@ -240,13 +282,6 @@ async function convertFile(uri: vscode.Uri, outputChannel: vscode.OutputChannel)
 
                     outputChannel.appendLine(`Converting - capturing selection at line ${selection?.start.line ?? 0 + 1}`);
 
-                    // Find the original tab
-                    const tabs = vscode.window.tabGroups.all.flatMap(group => group.tabs);
-                    const originalTab = tabs.find(tab =>
-                        tab.input instanceof vscode.TabInputText &&
-                        tab.input.uri.fsPath === filePath
-                    );
-
                     const doc = await vscode.workspace.openTextDocument(outPath);
                     const freeBidiEditor = await vscode.window.showTextDocument(doc, {
                         viewColumn: viewColumn,
@@ -261,16 +296,8 @@ async function convertFile(uri: vscode.Uri, outputChannel: vscode.OutputChannel)
                         outputChannel.appendLine(`Opened converted freebidi at line ${selection.start.line + 1}`);
                     }
 
-                    // Close the original file tab after opening freebidi
-                    if (originalTab) {
-                        try {
-                            await vscode.window.tabGroups.close(originalTab);
-                            outputChannel.appendLine(`Closed original file tab: ${filePath}`);
-                        } catch (closeErr: any) {
-                            // Tab might already be closed or invalid, log but continue
-                            outputChannel.appendLine(`Note: Could not close original tab (${closeErr.message}), may already be closed`);
-                        }
-                    }
+                    // Close any original source tabs after freebidi opens
+                    await closeOriginalTabs(filePath, outputChannel);
                 } catch (err: any) {
                     outputChannel.appendLine(`Error in delayed freebidi opening: ${err.message}`);
                 }
@@ -290,11 +317,16 @@ async function saveOriginalFile(document: vscode.TextDocument, outputChannel: vs
     const originalPath = path.join(path.dirname(path.dirname(tempPath)), path.basename(tempPath));
 
     try {
+        const configuredEncoding = vscode.workspace.getConfiguration('freeBidi').get<string>('rtlEncoding')?.trim();
+        const rtlEncoding = getRtlEncoding();
+        if (configuredEncoding && configuredEncoding !== rtlEncoding) {
+            outputChannel.appendLine(`Invalid freeBidi.rtlEncoding value '${configuredEncoding}', falling back to ${rtlEncoding}`);
+        }
         const content = document.getText();
         // Remove LRO markers
         const originalContent = content.replace(/\u202D/g, '');
-        fs.writeFileSync(originalPath, iconv.encode(originalContent, 'ISO-8859-8'));
-        outputChannel.appendLine(`Saved original file: ${originalPath}`);
+        fs.writeFileSync(originalPath, iconv.encode(originalContent, rtlEncoding));
+        outputChannel.appendLine(`Saved original file: ${originalPath} (encoding: ${rtlEncoding})`);
     } catch (err: any) {
         outputChannel.appendLine(`Error saving original file ${originalPath}: ${err.message}`);
         vscode.window.showErrorMessage(`Failed to save ${path.basename(originalPath)}: ${err.message}`);

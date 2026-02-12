@@ -1,8 +1,8 @@
 {
   "name": "free-bidi",
   "displayName": "Free Bidi Editor",
-  "description": "Converts ISO-8859-8 files to UTF-8 with LRO added before every Hebrew segments for free bidi display, preserving ISO-8859-8 on disk",
-  "version": "0.0.7",
+  "description": "Converts RTL encoded (such as ISO-8859-8 or ISO-8859-6) files to UTF-8 with LRO added before every RTL language (such as Hebrew or Arabic) segments for free bidi display, preserving RTL encoding on disk",
+  "version": "0.0.8",
   "publisher": "NLTC",
   "icon": "assets/free-bidi-icon.png",
   "engines": {
@@ -20,6 +20,10 @@
     "RTL",
     "Hebrew",
     "ISO-8859-8",
+    "Arabic",
+    "ISO-8859-6",
+    "RTL language",
+    "RTL encoding",
     "UTF-8",
     "bidi"
   ],
@@ -42,7 +46,17 @@
         "command": "free-bidi.convert",
         "title": "Free Bidi Editor: Convert File"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Free Bidi",
+      "properties": {
+        "freeBidi.rtlEncoding": {
+          "type": "string",
+          "default": "ISO-8859-8",
+          "description": "Encoding used for RTL source files when reading original files and saving changes back."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
