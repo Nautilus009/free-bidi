@@ -39,6 +39,14 @@ Add the following to settings.json for the best experience:{
 
 The settings "editor.renderControlCharacters": false and "editor.unicodeHighlight.invisibleCharacters": false prevent visual glyphs for LRO markers and other invisible Unicode characters, ensuring a clean editing experience.
 
+Git Recommendation
+
+If your project uses Git, add the temporary `.freebidi/` directory to `.gitignore` so converted working files are not tracked:
+
+```gitignore
+.freebidi/
+```
+
 
 
 Usage
